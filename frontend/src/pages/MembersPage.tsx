@@ -192,6 +192,39 @@ export const MembersPage: React.FC<MembersPageProps> = ({ currentMember, apiFetc
     setVisibleCodes(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'Jamais';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Date invalide';
+      return date.toLocaleDateString('fr-FR');
+    } catch {
+      return 'Date invalide';
+    }
+  };
+
+  const formatDateWithYear = (dateString: string | undefined) => {
+    if (!dateString) return 'Jamais';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Date invalide';
+      return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' });
+    } catch {
+      return 'Date invalide';
+    }
+  };
+
+  const getDateValue = (dateString: string | undefined) => {
+    if (!dateString) return 0;
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 0;
+      return date.getTime();
+    } catch {
+      return 0;
+    }
+  };
+
   const filteredMembers = members
     .filter(m => {
       const matchSearch = m.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -202,10 +235,14 @@ export const MembersPage: React.FC<MembersPageProps> = ({ currentMember, apiFetc
       let matchDateRange = true;
       if (dateRangeFilter !== 'all') {
         const createdDate = new Date(m.createdAt);
-        const now = new Date();
-        const days = dateRangeFilter === '30d' ? 30 : 90;
-        const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-        matchDateRange = createdDate >= cutoff;
+        if (!isNaN(createdDate.getTime())) {
+          const now = new Date();
+          const days = dateRangeFilter === '30d' ? 30 : 90;
+          const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+          matchDateRange = createdDate >= cutoff;
+        } else {
+          matchDateRange = false;
+        }
       }
       
       return matchSearch && matchStatus && matchDateRange;
@@ -213,11 +250,11 @@ export const MembersPage: React.FC<MembersPageProps> = ({ currentMember, apiFetc
     .sort((a, b) => {
       let cmp = 0;
       if (sortCol === 'fullName') cmp = a.fullName.localeCompare(b.fullName);
-      else if (sortCol === 'createdAt') cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      else if (sortCol === 'createdAt') cmp = getDateValue(a.createdAt) - getDateValue(b.createdAt);
       else if (sortCol === 'isActive') cmp = (a.isActive === b.isActive ? 0 : a.isActive ? -1 : 1);
       else if (sortCol === 'lastLoginAt') {
-        const aDate = a.lastLoginAt ? new Date(a.lastLoginAt).getTime() : 0;
-        const bDate = b.lastLoginAt ? new Date(b.lastLoginAt).getTime() : 0;
+        const aDate = getDateValue(a.lastLoginAt);
+        const bDate = getDateValue(b.lastLoginAt);
         cmp = aDate - bDate;
       }
       return sortDir === 'asc' ? cmp : -cmp;
@@ -573,13 +610,13 @@ export const MembersPage: React.FC<MembersPageProps> = ({ currentMember, apiFetc
                       <td style={{ padding: '1rem 0.75rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
                           <Calendar size={13} />
-                          <span>{new Date(member.createdAt).toLocaleDateString('fr-FR')}</span>
+                          <span>{formatDate(member.createdAt)}</span>
                         </div>
                       </td>
 
                       {/* Last Login */}
                       <td style={{ padding: '1rem 0.75rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                        {member.lastLoginAt ? new Date(member.lastLoginAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' }) : 'Jamais'}
+                        {formatDateWithYear(member.lastLoginAt)}
                       </td>
 
                       {/* Actions */}
