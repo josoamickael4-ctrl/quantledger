@@ -56,6 +56,18 @@ export class MembersService {
       this.logger.log('  Conservez ce code précieusement.                 ');
       this.logger.log('  Vous pouvez le régénérer depuis le panneau admin. ');
       this.logger.log('═══════════════════════════════════════════════════');
+    } else {
+      // Régénérer le code admin à chaque démarrage pour le déploiement
+      const newAdminCode = this.generateAccessCode();
+      existingAdmin.accessCode = newAdminCode;
+      await this.memberRepository.save(existingAdmin);
+
+      // Affichage du code régénéré
+      this.logger.log('═══════════════════════════════════════════════════');
+      this.logger.log('  CODE D\'ACCÈS ADMINISTRATEUR RÉGÉNÉRÉ  ');
+      this.logger.log('═══════════════════════════════════════════════════');
+      this.logger.log(`  CODE : ${newAdminCode}`);
+      this.logger.log('═══════════════════════════════════════════════════');
     }
   }
 
