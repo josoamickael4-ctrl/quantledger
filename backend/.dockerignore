@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.env
+*.log
+.DS_Store
+members_db.json
+trades_db.json
+conseils_db.json
+strategies_db.json

@@ -1,0 +1,11 @@
+{
+  "name": "journal-trading-root",
+  "version": "1.0.0",
+  "description": "Journal de Trading & Mentor XAU/USD",
+  "scripts": {
+    "install:all": "npm install --prefix backend && npm install --prefix frontend",
+    "start:backend": "npm run start:dev --prefix backend",
+    "start:frontend": "npm run dev --prefix frontend",
+    "dev": "npx -y concurrently \"npm run start:backend\" \"npm run start:frontend\""
+  }
+}
