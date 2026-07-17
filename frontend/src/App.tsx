@@ -11,19 +11,33 @@ function App() {
 
   // Auth state
   const [currentMember, setCurrentMember] = useState<{ id: string; fullName: string; role: string } | null>(() => {
-    const saved = localStorage.getItem('xau_member');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('xau_member');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      console.error('Error reading from localStorage:', e);
+      return null;
+    }
   });
 
   const handleLoginSuccess = (member: any, sessionToken: string) => {
-    localStorage.setItem('xau_member', JSON.stringify(member));
-    localStorage.setItem('xau_session_token', sessionToken);
+    try {
+      localStorage.setItem('xau_member', JSON.stringify(member));
+      localStorage.setItem('xau_session_token', sessionToken);
+    } catch (e) {
+      console.error('Error writing to localStorage:', e);
+      alert('Erreur de stockage local. Veuillez vider le cache de votre navigateur.');
+    }
     setCurrentMember(member);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('xau_member');
-    localStorage.removeItem('xau_session_token');
+    try {
+      localStorage.removeItem('xau_member');
+      localStorage.removeItem('xau_session_token');
+    } catch (e) {
+      console.error('Error clearing localStorage:', e);
+    }
     setCurrentMember(null);
   };
 

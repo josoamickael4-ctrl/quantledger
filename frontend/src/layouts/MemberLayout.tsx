@@ -190,6 +190,34 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [backendOnline, setBackendOnline] = useState(false);
 
+  // Helper function for safe localStorage operations
+  const safeLocalStorage = {
+    getItem: (key: string): string | null => {
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        console.error('Error reading from localStorage:', e);
+        return null;
+      }
+    },
+    setItem: (key: string, value: string): boolean => {
+      try {
+        localStorage.setItem(key, value);
+        return true;
+      } catch (e) {
+        console.error('Error writing to localStorage:', e);
+        return false;
+      }
+    },
+    removeItem: (key: string): void => {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        console.error('Error removing from localStorage:', e);
+      }
+    }
+  };
+
   const toggleMobileMenu = () => {
     setMobileMenuOpen(v => !v);
   };
@@ -199,7 +227,7 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
   };
 
   const [dailyGoal, setDailyGoal] = useState<number>(() => {
-    const saved = localStorage.getItem('xau_daily_goal');
+    const saved = safeLocalStorage.getItem('xau_daily_goal');
     return saved ? parseFloat(saved) : 500;
   });
 
@@ -225,13 +253,13 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
 
   const [capital, setCapital] = useState<number>(() => {
     const memberKey = `xau_capital_${currentMember.id}`;
-    const saved = localStorage.getItem(memberKey);
+    const saved = safeLocalStorage.getItem(memberKey);
     return saved ? parseFloat(saved) : 0;
   });
 
   const [capitalHistory, setCapitalHistory] = useState<CapitalEntry[]>(() => {
     const historyKey = `xau_capital_history_${currentMember.id}`;
-    const saved = localStorage.getItem(historyKey);
+    const saved = safeLocalStorage.getItem(historyKey);
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -245,7 +273,7 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
       } catch {}
 
       // TRADES
-      const localTradesStr = localStorage.getItem('xau_trades');
+      const localTradesStr = safeLocalStorage.getItem('xau_trades');
       let localTrades: Trade[] = [];
       if (localTradesStr) { try { localTrades = JSON.parse(localTradesStr); } catch {} }
 
@@ -270,7 +298,7 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
               if (r.ok) syncedTrades.push(await r.json()); else failedSync.push(localTrade);
             } catch { failedSync.push(localTrade); }
           }
-          if (failedSync.length > 0) localStorage.setItem('xau_trades', JSON.stringify(failedSync)); else localStorage.removeItem('xau_trades');
+          if (failedSync.length > 0) safeLocalStorage.setItem('xau_trades', JSON.stringify(failedSync)); else safeLocalStorage.removeItem('xau_trades');
           const sorted = syncedTrades.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
           setTrades(sorted); if (sorted.length > 0) setSelectedTrade(sorted[0]);
         } else {
@@ -282,7 +310,7 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
       setLoadingTrades(false);
 
       // CONSEILS
-      const localConseilsStr = localStorage.getItem('xau_conseils');
+      const localConseilsStr = safeLocalStorage.getItem('xau_conseils');
       let localConseils: Conseil[] = [];
       if (localConseilsStr) { try { localConseils = JSON.parse(localConseilsStr); } catch {} }
 
@@ -305,7 +333,7 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
               if (r.ok) syncedConseils.push(await r.json()); else failedSync.push(lc);
             } catch { failedSync.push(lc); }
           }
-          if (failedSync.length > 0) localStorage.setItem('xau_conseils', JSON.stringify(failedSync)); else localStorage.removeItem('xau_conseils');
+          if (failedSync.length > 0) safeLocalStorage.setItem('xau_conseils', JSON.stringify(failedSync)); else safeLocalStorage.removeItem('xau_conseils');
           const sorted = syncedConseils.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
           setConseils(sorted); if (sorted.length > 0) setLastAddedConseil(sorted[0]);
         } else {
@@ -318,7 +346,7 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
       }
 
       // STRATEGIES
-      const localStrategiesStr = localStorage.getItem('xau_strategies');
+      const localStrategiesStr = safeLocalStorage.getItem('xau_strategies');
       let localStrategies: Strategy[] = [];
       if (localStrategiesStr) { try { localStrategies = JSON.parse(localStrategiesStr); } catch {} }
 
@@ -342,14 +370,14 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
               if (r.ok) syncedStrats.push(await r.json()); else failedSync.push(ls);
             } catch { failedSync.push(ls); }
           }
-          if (failedSync.length > 0) localStorage.setItem('xau_strategies', JSON.stringify(failedSync)); else localStorage.removeItem('xau_strategies');
+          if (failedSync.length > 0) safeLocalStorage.setItem('xau_strategies', JSON.stringify(failedSync)); else safeLocalStorage.removeItem('xau_strategies');
           setStrategies(syncedStrats.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime()));
         } else {
           setStrategies(backendStrategies);
         }
         setLoadingStrategies(false);
       } else {
-        if (localStrategies.length > 0) { setStrategies(localStrategies); } else { setStrategies(DEFAULT_STRATEGIES); localStorage.setItem('xau_strategies', JSON.stringify(DEFAULT_STRATEGIES)); }
+        if (localStrategies.length > 0) { setStrategies(localStrategies); } else { setStrategies(DEFAULT_STRATEGIES); safeLocalStorage.setItem('xau_strategies', JSON.stringify(DEFAULT_STRATEGIES)); }
         setLoadingStrategies(false);
       }
 
@@ -359,7 +387,7 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
 
   const todayStr = new Date().toDateString();
   const todayPnL = trades.filter(t => t.createdAt && new Date(t.createdAt).toDateString() === todayStr).reduce((sum, t) => sum + (typeof t.resultat === 'number' ? t.resultat : 0), 0);
-  const handleSetDailyGoal = (val: number) => { setDailyGoal(val); localStorage.setItem('xau_daily_goal', val.toString()); };
+  const handleSetDailyGoal = (val: number) => { setDailyGoal(val); safeLocalStorage.setItem('xau_daily_goal', val.toString()); };
 
   // ── Trade handlers ──────────────────────────────────────────────────────
   const handleAddTrade = async (data: Omit<Trade, 'id' | 'createdAt' | 'analyseMentor'>) => {
@@ -370,7 +398,7 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
       } catch {}
     }
     const local: Trade = { id: Math.random().toString(36).substring(2, 9), ...data, analyseMentor: localAnalysis(data), createdAt: (data as any).createdAt || new Date().toISOString() };
-    setTrades(prev => { const u = [local, ...prev]; localStorage.setItem('xau_trades', JSON.stringify(u)); return u; });
+    setTrades(prev => { const u = [local, ...prev]; safeLocalStorage.setItem('xau_trades', JSON.stringify(u)); return u; });
     setSelectedTrade(local);
   };
 
@@ -381,13 +409,13 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
         if (r.ok) { const updated: Trade = await r.json(); setTrades(prev => prev.map(t => t.id === id ? updated : t)); setSelectedTrade(prev => prev?.id === id ? updated : prev); return; }
       } catch {}
     }
-    setTrades(prev => { const u = prev.map(t => t.id === id ? { ...t, ...updates } : t); localStorage.setItem('xau_trades', JSON.stringify(u)); return u; });
+    setTrades(prev => { const u = prev.map(t => t.id === id ? { ...t, ...updates } : t); safeLocalStorage.setItem('xau_trades', JSON.stringify(u)); return u; });
     setSelectedTrade(prev => prev?.id === id ? { ...prev, ...updates } : prev);
   };
 
   const handleDeleteTrade = async (id: string) => {
     if (backendOnline) { try { await apiFetch(`${API_TRADES}/${id}`, { method: 'DELETE' }); } catch {} }
-    setTrades(prev => { const u = prev.filter(t => t.id !== id); localStorage.setItem('xau_trades', JSON.stringify(u)); return u; });
+    setTrades(prev => { const u = prev.filter(t => t.id !== id); safeLocalStorage.setItem('xau_trades', JSON.stringify(u)); return u; });
     setSelectedTrade(prev => prev?.id === id ? (trades.find(t => t.id !== id) || null) : prev);
   };
 
@@ -400,7 +428,7 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
       } catch {}
     }
     const local: Conseil = { id: Math.random().toString(36).substring(2, 9), ...data, simplifiedText: localSimplify(data.rawText), createdAt: new Date().toISOString() };
-    setConseils(prev => { const u = [local, ...prev]; localStorage.setItem('xau_conseils', JSON.stringify(u)); return u; });
+    setConseils(prev => { const u = [local, ...prev]; safeLocalStorage.setItem('xau_conseils', JSON.stringify(u)); return u; });
     setLastAddedConseil(local);
   };
 
@@ -413,13 +441,13 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
     }
     const newSimplified = localSimplify(updates.rawText);
     const updatedLocal = { rawText: updates.rawText, categorie: updates.categorie, simplifiedText: newSimplified };
-    setConseils(prev => { const u = prev.map(c => c.id === id ? { ...c, ...updatedLocal } : c); localStorage.setItem('xau_conseils', JSON.stringify(u)); return u; });
+    setConseils(prev => { const u = prev.map(c => c.id === id ? { ...c, ...updatedLocal } : c); safeLocalStorage.setItem('xau_conseils', JSON.stringify(u)); return u; });
     if (lastAddedConseil?.id === id) setLastAddedConseil(prev => prev ? { ...prev, ...updatedLocal } : null);
   };
 
   const handleDeleteConseil = async (id: string) => {
     if (backendOnline) { try { await apiFetch(`${API_CONSEILS}/${id}`, { method: 'DELETE' }); } catch {} }
-    setConseils(prev => { const u = prev.filter(c => c.id !== id); localStorage.setItem('xau_conseils', JSON.stringify(u)); return u; });
+    setConseils(prev => { const u = prev.filter(c => c.id !== id); safeLocalStorage.setItem('xau_conseils', JSON.stringify(u)); return u; });
     if (lastAddedConseil?.id === id) setLastAddedConseil(null);
   };
 
@@ -432,20 +460,20 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
       } catch {}
     }
     const local: Strategy = { id: Math.random().toString(36).substring(2, 9), ...data, createdAt: new Date().toISOString() };
-    setStrategies(prev => { const u = [local, ...prev]; localStorage.setItem('xau_strategies', JSON.stringify(u)); return u; });
+    setStrategies(prev => { const u = [local, ...prev]; safeLocalStorage.setItem('xau_strategies', JSON.stringify(u)); return u; });
   };
 
   const handleDeleteStrategy = async (id: string) => {
     if (backendOnline) { try { await apiFetch(`${API_STRATEGIES}/${id}`, { method: 'DELETE' }); } catch {} }
-    setStrategies(prev => { const u = prev.filter(s => s.id !== id); localStorage.setItem('xau_strategies', JSON.stringify(u)); return u; });
+    setStrategies(prev => { const u = prev.filter(s => s.id !== id); safeLocalStorage.setItem('xau_strategies', JSON.stringify(u)); return u; });
   };
 
   const handleUpdateCapital = (newCapital: number, entryDetails: Omit<CapitalEntry, 'id' | 'date' | 'balanceApres'>) => {
     const entry: CapitalEntry = { id: Math.random().toString(36).substring(2, 9), date: new Date().toISOString(), balanceApres: newCapital, ...entryDetails };
     const updatedHistory = [entry, ...capitalHistory];
     setCapital(newCapital); setCapitalHistory(updatedHistory);
-    localStorage.setItem(`xau_capital_${currentMember.id}`, newCapital.toString());
-    localStorage.setItem(`xau_capital_history_${currentMember.id}`, JSON.stringify(updatedHistory));
+    safeLocalStorage.setItem(`xau_capital_${currentMember.id}`, newCapital.toString());
+    safeLocalStorage.setItem(`xau_capital_history_${currentMember.id}`, JSON.stringify(updatedHistory));
   };
 
   const handleDeleteCapitalEntry = (id: string) => {
@@ -459,8 +487,8 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
     });
     const newCapital = updatedHistory.length > 0 ? updatedHistory[0].balanceApres : 0;
     setCapital(newCapital); setCapitalHistory(updatedHistory);
-    localStorage.setItem(`xau_capital_${currentMember.id}`, newCapital.toString());
-    localStorage.setItem(`xau_capital_history_${currentMember.id}`, JSON.stringify(updatedHistory));
+    safeLocalStorage.setItem(`xau_capital_${currentMember.id}`, newCapital.toString());
+    safeLocalStorage.setItem(`xau_capital_history_${currentMember.id}`, JSON.stringify(updatedHistory));
   };
 
   return (
@@ -565,7 +593,7 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
                 if (onUpdateMember) {
                   onUpdateMember(updatedMember);
                 }
-                localStorage.setItem('xau_member', JSON.stringify(updatedMember));
+                safeLocalStorage.setItem('xau_member', JSON.stringify(updatedMember));
               }}
             />
           )}
