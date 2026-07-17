@@ -23,6 +23,8 @@ interface MembersPageProps {
 }
 
 export const MembersPage: React.FC<MembersPageProps> = ({ currentMember, apiFetch }) => {
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  
   const [members, setMembers] = useState<MemberData[]>([]);
   const [totalMembers, setTotalMembers] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,7 +52,7 @@ export const MembersPage: React.FC<MembersPageProps> = ({ currentMember, apiFetc
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/members?page=${page}&limit=50`, {
+      const response = await fetch(`${API_BASE}/api/members?page=${page}&limit=50`, {
         headers: {
           'x-member-role': currentMember?.role || 'member',
         },
@@ -80,7 +82,7 @@ export const MembersPage: React.FC<MembersPageProps> = ({ currentMember, apiFetc
 
     setCreating(true);
     try {
-      const response = await fetch('/api/members', {
+      const response = await fetch(`${API_BASE}/api/members`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -116,7 +118,7 @@ export const MembersPage: React.FC<MembersPageProps> = ({ currentMember, apiFetc
 
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
-      const response = await fetch(`/api/members/${id}`, {
+      const response = await fetch(`${API_BASE}/api/members/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -142,7 +144,7 @@ export const MembersPage: React.FC<MembersPageProps> = ({ currentMember, apiFetc
     }
 
     try {
-      const response = await fetch(`/api/members/${id}/regenerate-code`, {
+      const response = await fetch(`${API_BASE}/api/members/${id}/regenerate-code`, {
         method: 'PATCH',
         headers: {
           'x-member-role': currentMember?.role || 'member',
@@ -166,7 +168,7 @@ export const MembersPage: React.FC<MembersPageProps> = ({ currentMember, apiFetc
     }
 
     try {
-      const response = await fetch(`/api/members/${id}`, {
+      const response = await fetch(`${API_BASE}/api/members/${id}`, {
         method: 'DELETE',
         headers: {
           'x-member-role': currentMember?.role || 'member',
