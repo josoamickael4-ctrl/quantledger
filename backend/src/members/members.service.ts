@@ -35,7 +35,7 @@ export class MembersService {
     });
 
     if (!existingAdmin) {
-      const adminCode = this.generateAccessCode();
+      const adminCode = 'ADMIN-2024-QUANT-LEDGER'; // Code admin fixe
       const adminMember = this.memberRepository.create({
         fullName: 'Administrateur',
         email: 'admin@trading-journal.local',
@@ -57,16 +57,15 @@ export class MembersService {
       this.logger.log('  Vous pouvez le régénérer depuis le panneau admin. ');
       this.logger.log('═══════════════════════════════════════════════════');
     } else {
-      // Régénérer le code admin à chaque démarrage pour le déploiement
-      const newAdminCode = this.generateAccessCode();
-      existingAdmin.accessCode = newAdminCode;
+      // Mettre à jour le code admin avec le code fixe
+      existingAdmin.accessCode = 'ADMIN-2024-QUANT-LEDGER';
       await this.memberRepository.save(existingAdmin);
 
-      // Affichage du code régénéré
+      // Affichage du code
       this.logger.log('═══════════════════════════════════════════════════');
-      this.logger.log('  CODE D\'ACCÈS ADMINISTRATEUR RÉGÉNÉRÉ  ');
+      this.logger.log('  CODE D\'ACCÈS ADMINISTRATEUR  ');
       this.logger.log('═══════════════════════════════════════════════════');
-      this.logger.log(`  CODE : ${newAdminCode}`);
+      this.logger.log(`  CODE : ADMIN-2024-QUANT-LEDGER`);
       this.logger.log('═══════════════════════════════════════════════════');
     }
   }
