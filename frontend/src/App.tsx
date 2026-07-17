@@ -3,7 +3,8 @@ import { LoginPage } from './pages/LoginPage';
 import { AdminLayout } from './layouts/AdminLayout';
 import { MemberLayout } from './layouts/MemberLayout';
 
-const API_STRATEGIES = '/api/strategies';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_STRATEGIES = `${API_BASE}/api/strategies`;
 
 function App() {
   const [backendOnline, setBackendOnline] = useState(false);
@@ -28,12 +29,13 @@ function App() {
 
   // Helper for member-isolated API requests
   const apiFetch = async (url: string, options: RequestInit = {}) => {
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
     const headers = {
       ...(options.headers || {}),
       'x-member-id': currentMember?.id || '',
       'x-member-role': currentMember?.role || '',
     };
-    return fetch(url, { ...options, headers });
+    return fetch(fullUrl, { ...options, headers });
   };
 
   // Check backend connection

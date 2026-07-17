@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Lock, ShieldAlert, Loader2, ArrowRight } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 interface LoginPageProps {
   onLoginSuccess: (member: any, token: string) => void;
 }
@@ -16,7 +18,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/access', {
+      const response = await fetch(`${API_BASE}/api/auth/access`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: accessCode.trim().toUpperCase() }),
