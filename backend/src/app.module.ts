@@ -15,6 +15,7 @@ import { AdminModule } from './admin/admin.module';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
+      url: process.env.DATABASE_URL,
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT || '5432'),
       username: process.env.DB_USERNAME || 'trading_user',
@@ -23,6 +24,7 @@ import { AdminModule } from './admin/admin.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true, // Auto-create tables (disable in production)
       logging: false,
+      ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
     }),
     TradesModule,
     ConseilsModule,
