@@ -5,6 +5,9 @@ import { json, urlencoded } from 'express';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
+  // Ajouter le préfixe /api à toutes les routes
+  app.setGlobalPrefix('api');
+  
   // Activer CORS pour autoriser les requêtes du frontend
   app.enableCors({
     origin: '*', // En local, on peut autoriser toutes les origines pour simplifier les tests
