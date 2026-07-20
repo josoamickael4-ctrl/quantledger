@@ -279,33 +279,41 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
 
       if (online) {
         let backendTrades: Trade[] = [];
-        try { 
-          const r = await apiFetch(`${API_TRADES}?page=${tradesPage}&limit=${PAGE_SIZE}`); 
+        try {
+          const r = await apiFetch(`${API_TRADES}?page=${tradesPage}&limit=${PAGE_SIZE}`);
           if (r.ok) {
             const response = await r.json();
             backendTrades = response.data;
             setTradesTotal(response.total);
-          } 
+          }
         } catch {}
 
+        // Always keep local data as primary if backend fails or is empty
         if (localTrades.length > 0) {
-          const syncedTrades = [...backendTrades];
-          const failedSync: Trade[] = [];
-          for (const localTrade of localTrades) {
-            try {
-              const { id, createdAt, analyseMentor, ...dto } = localTrade;
-              const r = await apiFetch(API_TRADES, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dto) });
-              if (r.ok) syncedTrades.push(await r.json()); else failedSync.push(localTrade);
-            } catch { failedSync.push(localTrade); }
-          }
-          if (failedSync.length > 0) safeLocalStorage.setItem('xau_trades', JSON.stringify(failedSync)); else safeLocalStorage.removeItem('xau_trades');
-          const sorted = syncedTrades.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
-          setTrades(sorted); if (sorted.length > 0) setSelectedTrade(sorted[0]);
+          setTrades(localTrades);
+          if (localTrades.length > 0) setSelectedTrade(localTrades[0]);
+          // Try to sync in background without blocking
+          (async () => {
+            const syncedTrades = [...backendTrades];
+            const failedSync: Trade[] = [];
+            for (const localTrade of localTrades) {
+              try {
+                const { id, createdAt, analyseMentor, ...dto } = localTrade;
+                const r = await apiFetch(API_TRADES, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dto) });
+                if (r.ok) syncedTrades.push(await r.json()); else failedSync.push(localTrade);
+              } catch { failedSync.push(localTrade); }
+            }
+            if (failedSync.length > 0) safeLocalStorage.setItem('xau_trades', JSON.stringify(failedSync)); else safeLocalStorage.removeItem('xau_trades');
+            const sorted = syncedTrades.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
+            setTrades(sorted);
+          })();
         } else {
-          setTrades(backendTrades); if (backendTrades.length > 0) setSelectedTrade(backendTrades[0]);
+          setTrades(backendTrades);
+          if (backendTrades.length > 0) setSelectedTrade(backendTrades[0]);
         }
       } else {
-        setTrades(localTrades); if (localTrades.length > 0) setSelectedTrade(localTrades[0]);
+        setTrades(localTrades);
+        if (localTrades.length > 0) setSelectedTrade(localTrades[0]);
       }
       setLoadingTrades(false);
 
@@ -316,32 +324,41 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
 
       if (online) {
         let backendConseils: Conseil[] = [];
-        try { 
-          const r = await apiFetch(`${API_CONSEILS}?page=${conseilsPage}&limit=${PAGE_SIZE}`); 
+        try {
+          const r = await apiFetch(`${API_CONSEILS}?page=${conseilsPage}&limit=${PAGE_SIZE}`);
           if (r.ok) {
             const response = await r.json();
             backendConseils = response.data;
             setConseilsTotal(response.total);
-          } 
-        } catch {}
-        if (localConseils.length > 0) {
-          const syncedConseils = [...backendConseils]; const failedSync: Conseil[] = [];
-          for (const lc of localConseils) {
-            try {
-              const { id, createdAt, simplifiedText, ...dto } = lc;
-              const r = await apiFetch(API_CONSEILS, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dto) });
-              if (r.ok) syncedConseils.push(await r.json()); else failedSync.push(lc);
-            } catch { failedSync.push(lc); }
           }
-          if (failedSync.length > 0) safeLocalStorage.setItem('xau_conseils', JSON.stringify(failedSync)); else safeLocalStorage.removeItem('xau_conseils');
-          const sorted = syncedConseils.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
-          setConseils(sorted); if (sorted.length > 0) setLastAddedConseil(sorted[0]);
+        } catch {}
+        // Always keep local data as primary if backend fails or is empty
+        if (localConseils.length > 0) {
+          setConseils(localConseils);
+          if (localConseils.length > 0) setLastAddedConseil(localConseils[0]);
+          // Try to sync in background without blocking
+          (async () => {
+            const syncedConseils = [...backendConseils];
+            const failedSync: Conseil[] = [];
+            for (const lc of localConseils) {
+              try {
+                const { id, createdAt, simplifiedText, ...dto } = lc;
+                const r = await apiFetch(API_CONSEILS, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dto) });
+                if (r.ok) syncedConseils.push(await r.json()); else failedSync.push(lc);
+              } catch { failedSync.push(lc); }
+            }
+            if (failedSync.length > 0) safeLocalStorage.setItem('xau_conseils', JSON.stringify(failedSync)); else safeLocalStorage.removeItem('xau_conseils');
+            const sorted = syncedConseils.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
+            setConseils(sorted);
+          })();
         } else {
-          setConseils(backendConseils); if (backendConseils.length > 0) setLastAddedConseil(backendConseils[0]);
+          setConseils(backendConseils);
+          if (backendConseils.length > 0) setLastAddedConseil(backendConseils[0]);
         }
         setLoadingConseils(false);
       } else {
-        setConseils(localConseils); if (localConseils.length > 0) setLastAddedConseil(localConseils[0]);
+        setConseils(localConseils);
+        if (localConseils.length > 0) setLastAddedConseil(localConseils[0]);
         setLoadingConseils(false);
       }
 
@@ -352,26 +369,32 @@ export function MemberLayout({ currentMember, apiFetch, onLogout, onUpdateMember
 
       if (online) {
         let backendStrategies: Strategy[] = [];
-        try { 
-          const r = await apiFetch(`${API_STRATEGIES}?page=${strategiesPage}&limit=${PAGE_SIZE}`); 
+        try {
+          const r = await apiFetch(`${API_STRATEGIES}?page=${strategiesPage}&limit=${PAGE_SIZE}`);
           if (r.ok) {
             const response = await r.json();
             backendStrategies = response.data;
             setStrategiesTotal(response.total);
-          } 
-        } catch {}
-        if (localStrategies.length > 0) {
-          const syncedStrats = [...backendStrategies]; const failedSync: Strategy[] = [];
-          const customStrategies = localStrategies.filter(s => !s.id?.startsWith('strat-'));
-          for (const ls of customStrategies) {
-            try {
-              const { id, createdAt, ...dto } = ls;
-              const r = await apiFetch(API_STRATEGIES, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dto) });
-              if (r.ok) syncedStrats.push(await r.json()); else failedSync.push(ls);
-            } catch { failedSync.push(ls); }
           }
-          if (failedSync.length > 0) safeLocalStorage.setItem('xau_strategies', JSON.stringify(failedSync)); else safeLocalStorage.removeItem('xau_strategies');
-          setStrategies(syncedStrats.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime()));
+        } catch {}
+        // Always keep local data as primary if backend fails or is empty
+        if (localStrategies.length > 0) {
+          setStrategies(localStrategies);
+          // Try to sync in background without blocking
+          (async () => {
+            const syncedStrats = [...backendStrategies];
+            const failedSync: Strategy[] = [];
+            const customStrategies = localStrategies.filter(s => !s.id?.startsWith('strat-'));
+            for (const ls of customStrategies) {
+              try {
+                const { id, createdAt, ...dto } = ls;
+                const r = await apiFetch(API_STRATEGIES, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dto) });
+                if (r.ok) syncedStrats.push(await r.json()); else failedSync.push(ls);
+              } catch { failedSync.push(ls); }
+            }
+            if (failedSync.length > 0) safeLocalStorage.setItem('xau_strategies', JSON.stringify(failedSync)); else safeLocalStorage.removeItem('xau_strategies');
+            setStrategies(syncedStrats.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime()));
+          })();
         } else {
           setStrategies(backendStrategies);
         }
