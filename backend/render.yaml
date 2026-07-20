@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: quantledger-backend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: node dist/main.js
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: quantledger-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
